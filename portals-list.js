@@ -3,9 +3,9 @@
 // @name           teo96: show list of portals
 // @version        0.0.3
 // @namespace      https://github.com/breunigs/ingress-intel-total-conversion
-// @updateURL      https://raw.github.com/teo96/iitc-plugins/master/portals-list.js
-// @downloadURL    https://raw.github.com/teo96/iitc-plugins/master/portals-list.js
-// @description    Display a sortable list of all localized portals with team, level, resonators informations
+// @updateURL      https://raw.github.com/teo96/sandbox/master/portals-list    
+// @downloadURL    https://raw.github.com/teo96/sandbox/master/portals-list
+// @description    Display a sortable list of all localized portails with team, level, resonators informations
 // @include        https://www.ingress.com/intel*
 // @match          https://www.ingress.com/intel*
 // ==/UserScript==
@@ -30,7 +30,6 @@ if(typeof window.plugin !== 'function') window.plugin = function() {};
 window.plugin.portalslist = function() {};
     
 window.plugin.portalslist.listPortals = []; // structure : name, team, level, resonators = Array, Shields = Array, APgain
-window.plugin.portalslist.lastSort='';
 window.plugin.portalslist.sortOrder=-1;    
 window.plugin.portalslist.enlP = 0;
 window.plugin.portalslist.resP = 0;
@@ -71,7 +70,7 @@ window.plugin.portalslist.getPortals = function(){
                        
          //get shield informations 
            var shields = [];
-         $.each(d.portalV2.linkedModArray, function(ind, mod) {
+       	$.each(d.portalV2.linkedModArray, function(ind, mod) {
            if (mod) 
               shields[ind] = mod.rarity.capitalize().replace('_', ' ');
            else
@@ -88,11 +87,12 @@ window.plugin.portalslist.getPortals = function(){
     
 window.plugin.portalslist.displayPL = function() {   
     var html = '';
-    if (window.plugin.portalslist.getPortals()) {
-        window.plugin.portalslist.lastSort='level';
-        window.plugin.portalslist.sortOrder=-1;
-        html += window.plugin.portalslist.portalTable(window.plugin.portalslist.lastSort='level', window.plugin.portalslist.sortOrder=-1);
+    window.plugin.portalslist.sortOrder=-1;
+    window.plugin.portalslist.enlP = 0;
+    window.plugin.portalslist.resP = 0;
 
+    if (window.plugin.portalslist.getPortals()) {
+       html += window.plugin.portalslist.portalTable('level', window.plugin.portalslist.sortOrder);
     } else {
     	console.log('KO');
     };
@@ -101,10 +101,7 @@ window.plugin.portalslist.displayPL = function() {
   
     // Setup sorting
     $(document).on('click', '#portalslist table th', function() {    	
-        window.plugin.portalslist.sortOrder = window.plugin.portalslist.sortOrder*-1
-        console.log('click on ' + this + ' window.plugin.portalslist.sortOrder = ' + window.plugin.portalslist.sortOrder);
         $('#portalslist').html(window.plugin.portalslist.portalTable($(this).data('sort'),window.plugin.portalslist.sortOrder));
-        
   	});
     
  }
@@ -117,7 +114,7 @@ window.plugin.portalslist.portalTable = function(sortBy, sortOrder) {
     //tri du tableau window.plugin.portalslist.listPortals
     window.plugin.portalslist.listPortals.sort(function(a, b) {
         var retVal = 0;
-        console.log('****Sort:window.plugin.portalslist.sortOrder = ' + window.plugin.portalslist.sortOrder);
+        
         if (sortOrder < 0) {
             switch (sortBy) {
                 case 'names':
@@ -257,7 +254,7 @@ window.plugin.portalslist.portalTable = function(sortBy, sortOrder) {
         html+= '</tr>';
     });
     html+='</table>';
-    window.plugin.portalslist.portalTableSort.lastSort=sortBy;
+    window.plugin.portalslist.sortOrder = window.plugin.portalslist.sortOrder*-1;
     return html;
 }
 
@@ -291,15 +288,17 @@ var setup =  function() {
     '#portalslist table tr.enl td {  background-color: #017f01; }' +
     '#portalslist table tr.neutral td {  background-color: #000000; }' +
     '#portalslist table th { text-align:center;}' +
-    '#portalslist table td.L0 { background-color: #000000 !important; text-align:center; }' +
-    '#portalslist table td.L1 { background-color: #FECE5A !important; text-align:center; }' +
-	'#portalslist table td.L2 { background-color: #9900FF !important; text-align:center; }' +
-	'#portalslist table td.L3 { background-color: #FF7315 !important; text-align:center; }' +
-	'#portalslist table td.L4 { background-color: #E40000 !important; text-align:center; }' +
-	'#portalslist table td.L5 { background-color: #FD2992 !important; text-align:center; }' +
-	'#portalslist table td.L6 { background-color: #EB26CD !important; text-align:center; }' +
-	'#portalslist table td.L7 { background-color: #C124E0 !important; text-align:center; }' +
-	'#portalslist table td.L8 { background-color: #9627F4 !important; text-align:center; }' +                   
+    '#portalslist table td { text-align: center;}' +
+    '#portalslist table td.L0 { background-color: #000000 !important;}' +
+    '#portalslist table td.L1 { background-color: #FECE5A !important;}' +
+	'#portalslist table td.L2 { background-color: #FFA630 !important;}' +
+	'#portalslist table td.L3 { background-color: #FF7315 !important;}' +
+	'#portalslist table td.L4 { background-color: #E40000 !important;}' +
+	'#portalslist table td.L5 { background-color: #FD2992 !important;}' +
+	'#portalslist table td.L6 { background-color: #EB26CD !important;}' +
+    '#portalslist table td.L7 { background-color: #C124E0 !important;}' +
+	'#portalslist table td.L8 { background-color: #9627F4 !important;}' + 
+    '#portalslist table td:nth-child(1) { text-align: left;}' +
     '#portalslist table th { cursor:pointer; text-align: right;}' +
     '#portalslist table th:nth-child(1) { text-align: left;}' +
     '#portalslist table th.sorted { color:#FFCE00; }' +
