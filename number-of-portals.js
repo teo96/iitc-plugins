@@ -3,8 +3,8 @@
 // @name           teo96: add the number of portals, links & fields under the portal panel
 // @version        0.0.1
 // @namespace      https://github.com/breunigs/ingress-intel-total-conversion
-// @updateURL      
-// @downloadURL    
+// @updateURL      https://raw.github.com/teo96/iitc-plugins/master/number-of-portals.js
+// @downloadURL    https://raw.github.com/teo96/iitc-plugins/master/number-of-portals.js
 // @description    display number of portals, links & fields
 // @include        https://www.ingress.com/intel*
 // @match          https://www.ingress.com/intel*
