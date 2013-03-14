@@ -3,8 +3,8 @@
 // @name           teo96: show list of portals
 // @version        0.0.3
 // @namespace      https://github.com/breunigs/ingress-intel-total-conversion
-// @updateURL      https://raw.github.com/teo96/sandbox/master/portals-list    
-// @downloadURL    https://raw.github.com/teo96/sandbox/master/portals-list
+// @updateURL      https://raw.github.com/teo96/iitc-plugins/master/portals-list.js
+// @downloadURL    https://raw.github.com/teo96/iitc-plugins/master/portals-list.js
 // @description    Display a sortable list of all localized portals with team, level, resonators informations
 // @include        https://www.ingress.com/intel*
 // @match          https://www.ingress.com/intel*
