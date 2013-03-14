@@ -94,7 +94,7 @@ window.plugin.portalslist.displayPL = function() {
     if (window.plugin.portalslist.getPortals()) {
        html += window.plugin.portalslist.portalTable('level', window.plugin.portalslist.sortOrder);
     } else {
-    	console.log('KO');
+    	html = '<table><tr><td>Nothing to Show !</td></tr></table>';
     };
     alert('<div id="portalslist">' + html + '</div>');
     $(".ui-dialog").addClass('ui-dialog-portalslist');
@@ -281,8 +281,8 @@ var setup =  function() {
   $('body').append('<div id="portalslist" style="display:none;"></div>');
   $('#toolbox').append('<a onclick="window.plugin.portalslist.displayPL()">Portals List</a>');
   $('head').append('<style>' + 
-    '.ui-dialog-portalslist {max-width:800px !important; width:733px !important;}' + //position: absolute; top: 30px; left: 30px
-    '#portalslist table {margin-top:10px;	border-collapse: collapse; empty-cells: show; width:100%; clear: both;}' +
+    '.ui-dialog-portalslist {position: absolute !important; top: 30px !important; left: 30px !important;max-width:800px !important; width:733px !important;}' + //
+    '#portalslist table {margin-top:5px;	border-collapse: collapse; empty-cells: show; width:100%; clear: both;}' +
     '#portalslist table td, #portalslist table th {border-bottom: 1px solid #0b314e; padding:3px; color:white; background-color:#1b415e}' +
     '#portalslist table tr.res td {  background-color: #005684; }' +
     '#portalslist table tr.enl td {  background-color: #017f01; }' +
