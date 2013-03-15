@@ -1,7 +1,7 @@
 // ==UserScript==
 // @id             iitc-plugin-portals-list@teo96
 // @name           teo96: show list of portals
-// @version        0.0.3
+// @version        0.0.4
 // @namespace      https://github.com/breunigs/ingress-intel-total-conversion
 // @updateURL      https://raw.github.com/teo96/iitc-plugins/master/portals-list.user.js
 // @downloadURL    https://raw.github.com/teo96/iitc-plugins/master/portals-list.user.js
@@ -11,10 +11,12 @@
 // ==/UserScript==
 
 /* whatsnew
+* 0.0.4 : Add link to portals name, one click to display full information in portal panel, double click to zoom on portal, hover to show address
 * 0.0.3 : sorting ascending/descending and add numbers of portals by faction on top on table
 * 0.0.2 : add sorting feature when click on header column
 * 0.0.1 : initial release, show list of portals with level, team, resonators and shield information
-* Thanks to @vita10gy for his scoreboard plugin : iitc-plugin-scoreboard@vita10gy - https://github.com/breunigs/ingress-intel-total-conversion
+* Display code inspired from @vita10gy's scoreboard plugin : iitc-plugin-scoreboard@vita10gy - https://github.com/breunigs/ingress-intel-total-conversion
+* Portal link code from xelio - iitc: AP List - https://raw.github.com/breunigs/ingress-intel-total-conversion/gh-pages/plugins/ap-list.user.js
 * todo : 
 * - bug : Fix window position on load, sometimes on the right instead of center
 * - Feature : add link to each portal in the table, when click display details in the portal panel ex : <a onclick="window.zoomToAndShowPortal('1c9324e9ae994e43b409df3065009ad9.11', [47.846257, 1.916971]);return false" title="" href="https://ingress.com/intel?latE6=47846257&amp;lngE6=1916971&amp;z=17&amp;pguid=1c9324e9ae994e43b409df3065009ad9.11" class="help" aria-describedby="ui-tooltip-7">cage verte les aulnaies</a>
@@ -44,6 +46,7 @@ window.plugin.portalslist.getPortals = function(){
         retval=true;
         var d = portal.options.details;   
         var name =  d.portalV2.descriptiveText.TITLE;
+        
         var team = portal.options.team;
         switch (team){
             case 1 :
@@ -54,7 +57,7 @@ window.plugin.portalslist.getPortals = function(){
                 break;
         }
         var level = getPortalLevel(d).toFixed(2);
-    
+        var guid = portal.options.guid;
     
         //var player = portal.options.details.captured.capturingPlayerId;
         //get resonators informations
@@ -78,13 +81,13 @@ window.plugin.portalslist.getPortals = function(){
         });
         
         var APgain= getAttackApGain(d).totalAp;
-        var thisPortal = {'name':name,'team':team,'level':level,'resonators':resonators,'shields':shields,'APgain':APgain};
+        var thisPortal = {'portal':d,'name':name,'team':team,'level':level,'guid':guid, 'resonators':resonators,'shields':shields,'APgain':APgain};
         window.plugin.portalslist.listPortals.push(thisPortal);
 
     });
     return retval;
   }
-    
+
 window.plugin.portalslist.displayPL = function() {   
     var html = '';
     window.plugin.portalslist.sortOrder=-1;
@@ -110,7 +113,7 @@ window.plugin.portalslist.portalTable = function(sortBy, sortOrder) {
     // sortOrder <0 ==> desc, >0 ==> asc, i use sortOrder * -1 to change the state
     
     var portals=window.plugin.portalslist.listPortals;
-    console.log('********************** SortBy = ' + sortBy + ', SortOrder = ' + sortOrder);
+   
     //tri du tableau window.plugin.portalslist.listPortals
     window.plugin.portalslist.listPortals.sort(function(a, b) {
         var retVal = 0;
@@ -233,8 +236,9 @@ window.plugin.portalslist.portalTable = function(sortBy, sortOrder) {
     
     
     $.each(portals, function(ind, portal) {
+        
         html += '<tr class="' + (portal.team === 1 ? 'res' : (portal.team === 2 ? 'enl' : 'neutral')) + '">'
-        + '<td>' + portal.name + '</td>'
+        + '<td>' + window.plugin.portalslist.getPortalLink(portal.portal, portal.guid) + '</td>'
         + '<td class="L' + Math.floor(portal.level) +'">' + portal.level + '</td>'
         + '<td style="text-align:center;">' + portal.team + '</td>'
         + '<td class="L' + portal.resonators[0][0] +'">' + portal.resonators[0][0] + '</td>'
@@ -260,7 +264,7 @@ window.plugin.portalslist.portalTable = function(sortBy, sortOrder) {
 
 window.plugin.portalslist.stats = function(sortBy) {
     var html = '<table><tr>'
-    + '<td>Total Portals : </td><td style="text-align:center">' + window.plugin.portalslist.listPortals.length + '</td>'
+    + '<td><a href=""> </a>Total Portals : </td><td style="text-align:center">' + window.plugin.portalslist.listPortals.length + '</td>'
     + '<td>Resistant Portals : </td><td style=" background-color: #005684; text-align:center">' + window.plugin.portalslist.resP + '</td>' 
     + '<td>Enlightened Portals : </td><td style=" background-color: #017f01; text-align:center">' + window.plugin.portalslist.enlP + '</td>'  
     + '</tr></table>';
@@ -277,11 +281,35 @@ window.plugin.portalslist.portalTableSort = function(name, by) {
   return retVal;
 };
 
+// portal link - single click: select portal
+//               double click: zoom to and select portal
+//               hover: show address
+// code from getPortalLink function by xelio from iitc: AP List - https://raw.github.com/breunigs/ingress-intel-total-conversion/gh-pages/plugins/ap-list.user.js
+window.plugin.portalslist.getPortalLink = function(portal,guid) {
+ 
+    var latlng = [portal.locationE6.latE6/1E6, portal.locationE6.lngE6/1E6].join();
+    var jsSingleClick = 'window.renderPortalDetails(\''+guid+'\');return false';
+    var jsDoubleClick = 'window.zoomToAndShowPortal(\''+guid+'\', ['+latlng+']);return false';
+    var perma = 'https://ingress.com/intel?latE6='+portal.locationE6.latE6+'&lngE6='+portal.locationE6.lngE6+'&z=17&pguid='+guid;
+    
+    //Use Jquery to create the link, which escape characters in TITLE and ADDRESS of portal
+    var a = $('<a>',{
+        "class": 'help',
+        text: portal.portalV2.descriptiveText.TITLE,
+        title: portal.portalV2.descriptiveText.ADDRESS,
+        href: perma,
+        onClick: jsSingleClick,
+        onDblClick: jsDoubleClick
+    })[0].outerHTML;
+    var div = '<div style="overflow: hidden; text-overflow:ellipsis;">'+a+'</div>';
+    return div;
+}
+
 var setup =  function() {
   $('body').append('<div id="portalslist" style="display:none;"></div>');
   $('#toolbox').append('<a onclick="window.plugin.portalslist.displayPL()">Portals List</a>');
   $('head').append('<style>' + 
-    '.ui-dialog-portalslist {position: absolute !important; top: 30px !important; left: 30px !important;max-width:800px !important; width:733px !important;}' + //
+    '.ui-dialog-portalslist {position: absolute !important; top: 30px !important; left: 30px !important;max-width:800px !important; width:733px !important;}' + 
     '#portalslist table {margin-top:5px;	border-collapse: collapse; empty-cells: show; width:100%; clear: both;}' +
     '#portalslist table td, #portalslist table th {border-bottom: 1px solid #0b314e; padding:3px; color:white; background-color:#1b415e}' +
     '#portalslist table tr.res td {  background-color: #005684; }' +
@@ -302,7 +330,7 @@ var setup =  function() {
     '#portalslist table th { cursor:pointer; text-align: right;}' +
     '#portalslist table th:nth-child(1) { text-align: left;}' +
     '#portalslist table th.sorted { color:#FFCE00; }' +
-    '#portalslist .disclaimer { margin-top:10px; font-size:10px; }' +
+    //'#portalslist .disclaimer { margin-top:10px; font-size:10px; }' +
     '</style>');
 }
 
