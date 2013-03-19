@@ -1,7 +1,7 @@
 // ==UserScript==
 // @id             iitc-plugin-portals-list@teo96
 // @name           teo96: show list of portals
-// @version        0.0.4
+// @version        0.0.5
 // @namespace      https://github.com/breunigs/ingress-intel-total-conversion
 // @updateURL      https://raw.github.com/teo96/iitc-plugins/master/portals-list.user.js
 // @downloadURL    https://raw.github.com/teo96/iitc-plugins/master/portals-list.user.js
@@ -11,6 +11,7 @@
 // ==/UserScript==
 
 /* whatsnew
+* 0.0.5 : Filter portals by clicking on 'All portals', 'Res Portals' or 'Enl Portals'
 * 0.0.4 : Add link to portals name, one click to display full information in portal panel, double click to zoom on portal, hover to show address
 * 0.0.3 : sorting ascending/descending and add numbers of portals by faction on top on table
 * 0.0.2 : add sorting feature when click on header column
@@ -37,64 +38,68 @@ window.plugin.portalslist.enlP = 0;
 window.plugin.portalslist.resP = 0;
 
 //fill the listPortals array with portals avalaible on the map (by level filtered portals will not appear in the table)
-window.plugin.portalslist.getPortals = function(){
+window.plugin.portalslist.getPortals = function(filter){
+    //filter : 0 = All, 1 = Res, 2 = Enl
     
     var retval=false;
-    window.plugin.portalslist.listPortals = [];
-    //get portals informations from IITC
-    $.each(window.portals, function(i, portal) {
-        retval=true;
-        var d = portal.options.details;   
-        var name =  d.portalV2.descriptiveText.TITLE;
-        
-        var team = portal.options.team;
-        switch (team){
-            case 1 :
-                window.plugin.portalslist.resP++;
-                break;
-            case 2 :
-                window.plugin.portalslist.enlP++;
-                break;
-        }
-        var level = getPortalLevel(d).toFixed(2);
-        var guid = portal.options.guid;
-    
-        //var player = portal.options.details.captured.capturingPlayerId;
-        //get resonators informations
-        var resonators = []; // my local resonator array : reso level, reso deployed by, distance to portal, energy total, max 
-         
-        $.each(portal.options.details.resonatorArray.resonators, function(ind, reso) {
-          if(reso) {  
-            resonators[ind] = [reso.level, window.getPlayerName(reso.ownerGuid), reso.distanceToPortal, reso.energyTotal, RESO_NRG[reso.level]];
-          } else { resonators[ind] = [0,'',0,0,0]; }
-        }); 
-        // Sort resonators array by resonator level
-        resonators.sort(function (a, b) {return b[0] - a[0]});
-                       
-         //get shield informations 
-           var shields = [];
-         $.each(d.portalV2.linkedModArray, function(ind, mod) {
-           if (mod) 
-              shields[ind] = mod.rarity.capitalize().replace('_', ' ');
-           else
-              shields[ind] = ''; 
+    if (filter !== null){
+        window.plugin.portalslist.listPortals = [];
+        //get portals informations from IITC
+        $.each(window.portals, function(i, portal) {
+            if (filter === 0 || filter === portal.options.team){
+                retval=true;
+                var d = portal.options.details;   
+                var name =  d.portalV2.descriptiveText.TITLE;
+                
+                var team = portal.options.team;
+                switch (team){
+                    case 1 :
+                        window.plugin.portalslist.resP++;
+                        break;
+                    case 2 :
+                        window.plugin.portalslist.enlP++;
+                        break;
+                }
+                var level = getPortalLevel(d).toFixed(2);
+                var guid = portal.options.guid;
+                
+                //var player = portal.options.details.captured.capturingPlayerId;
+                //get resonators informations
+                var resonators = []; // my local resonator array : reso level, reso deployed by, distance to portal, energy total, max 
+                
+                $.each(portal.options.details.resonatorArray.resonators, function(ind, reso) {
+                    if(reso) {  
+                        resonators[ind] = [reso.level, window.getPlayerName(reso.ownerGuid), reso.distanceToPortal, reso.energyTotal, RESO_NRG[reso.level]];
+                    } else { resonators[ind] = [0,'',0,0,0]; }
+                }); 
+                // Sort resonators array by resonator level
+                resonators.sort(function (a, b) {return b[0] - a[0]});
+                
+                //get shield informations 
+                var shields = [];
+                $.each(d.portalV2.linkedModArray, function(ind, mod) {
+                    if (mod) 
+                        shields[ind] = mod.rarity.capitalize().replace('_', ' ');
+                    else
+                        shields[ind] = ''; 
+                });
+                
+                var APgain= getAttackApGain(d).enemyAp;
+                var thisPortal = {'portal':d,'name':name,'team':team,'level':level,'guid':guid, 'resonators':resonators,'shields':shields,'APgain':APgain};
+                window.plugin.portalslist.listPortals.push(thisPortal);
+            }
         });
-        
-        var APgain= getAttackApGain(d).totalAp;
-        var thisPortal = {'portal':d,'name':name,'team':team,'level':level,'guid':guid, 'resonators':resonators,'shields':shields,'APgain':APgain};
-        window.plugin.portalslist.listPortals.push(thisPortal);
-
-    });
-    return retval;
+        return retval;
+    }
   }
 
-window.plugin.portalslist.displayPL = function() {   
+window.plugin.portalslist.displayPL = function(filter) {   
     var html = '';
     window.plugin.portalslist.sortOrder=-1;
     window.plugin.portalslist.enlP = 0;
     window.plugin.portalslist.resP = 0;
 
-    if (window.plugin.portalslist.getPortals()) {
+    if (window.plugin.portalslist.getPortals(filter)) {
        html += window.plugin.portalslist.portalTable('level', window.plugin.portalslist.sortOrder);
     } else {
     	html = '<table><tr><td>Nothing to Show !</td></tr></table>';
@@ -239,6 +244,7 @@ window.plugin.portalslist.portalTable = function(sortBy, sortOrder) {
         
         html += '<tr class="' + (portal.team === 1 ? 'res' : (portal.team === 2 ? 'enl' : 'neutral')) + '">'
         + '<td>' + window.plugin.portalslist.getPortalLink(portal.portal, portal.guid) + '</td>'
+        //+ '<td>' + portal.name + '</td>'
         + '<td class="L' + Math.floor(portal.level) +'">' + portal.level + '</td>'
         + '<td style="text-align:center;">' + portal.team + '</td>'
         + '<td class="L' + portal.resonators[0][0] +'">' + portal.resonators[0][0] + '</td>'
@@ -258,20 +264,27 @@ window.plugin.portalslist.portalTable = function(sortBy, sortOrder) {
         html+= '</tr>';
     });
     html+='</table>';
+    html+= '<div class="disclaimer">Click on portal table headers to sort by that column.<br> '
+      + 'Click on All Portals, Resistant Portals, Enlightened Portals to filter<br>'
+      + 'Thanks to @vita10gy & @xelio for their IITC plugins who inspired me. A <a href="https://plus.google.com/113965246471577467739">@teo96</a> production. Vive la Résistance !</div>';
     window.plugin.portalslist.sortOrder = window.plugin.portalslist.sortOrder*-1;
     return html;
 }
 
 window.plugin.portalslist.stats = function(sortBy) {
     var html = '<table><tr>'
-    + '<td><a href=""> </a>Total Portals : </td><td style="text-align:center">' + window.plugin.portalslist.listPortals.length + '</td>'
-    + '<td>Resistant Portals : </td><td style=" background-color: #005684; text-align:center">' + window.plugin.portalslist.resP + '</td>' 
-    + '<td>Enlightened Portals : </td><td style=" background-color: #017f01; text-align:center">' + window.plugin.portalslist.enlP + '</td>'  
-    + '</tr></table>';
+    + '<td class="neutral" style="cursor:pointer" onclick="window.plugin.portalslist.filterPortals(0)"><a href=""></a>All Portals : (click to filter)</td><td style="text-align:center">' + window.plugin.portalslist.listPortals.length +'</td>'
+    + '<td class="res" style="cursor:pointer" onclick="window.plugin.portalslist.filterPortals(1)">Resistant Portals : </td><td style="res">' + window.plugin.portalslist.resP + '</td>' 
+    + '<td class="enl" style="cursor:pointer" onclick="window.plugin.portalslist.filterPortals(2)">Enlightened Portals : </td><td style="enl">' + window.plugin.portalslist.enlP + '</td>'  
+    + '</tr>'
+    + '</table>';
     return html;
 }
 
-
+window.plugin.portalslist.filterPortals = function(filter){
+  window.plugin.portalslist.displayPL(filter);
+    
+}
 // A little helper functon so the above isn't so messy
 window.plugin.portalslist.portalTableSort = function(name, by) {
   var retVal = 'data-sort="' + name + '"';
@@ -307,7 +320,7 @@ window.plugin.portalslist.getPortalLink = function(portal,guid) {
 
 var setup =  function() {
   $('body').append('<div id="portalslist" style="display:none;"></div>');
-  $('#toolbox').append('<a onclick="window.plugin.portalslist.displayPL()">Portals List</a>');
+  $('#toolbox').append('<a onclick="window.plugin.portalslist.displayPL(0)">Portals List</a>');
   $('head').append('<style>' + 
     '.ui-dialog-portalslist {position: absolute !important; top: 30px !important; left: 30px !important;max-width:800px !important; width:733px !important;}' + 
     '#portalslist table {margin-top:5px;	border-collapse: collapse; empty-cells: show; width:100%; clear: both;}' +
@@ -330,7 +343,7 @@ var setup =  function() {
     '#portalslist table th { cursor:pointer; text-align: right;}' +
     '#portalslist table th:nth-child(1) { text-align: left;}' +
     '#portalslist table th.sorted { color:#FFCE00; }' +
-    //'#portalslist .disclaimer { margin-top:10px; font-size:10px; }' +
+    '#portalslist .disclaimer { margin-top:10px; font-size:10px; }' +
     '</style>');
 }
 
