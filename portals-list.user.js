@@ -13,7 +13,7 @@
 // ==/UserScript==
 
 /* whatsnew
-* 0.0.7 : Add names of players who deployed resonators and shield in tooltips.
+* 0.0.7 : more informations avalaible via tooltips (who deployed, energy, ...), new E/AP column 
 * 0.0.6 : Add power charge information into a new column + bugfix
 * 0.0.5 : Filter portals by clicking on 'All portals', 'Res Portals' or 'Enl Portals'
 * 0.0.4 : Add link to portals name, one click to display full information in portal panel, double click to zoom on portal, hover to show address
@@ -94,7 +94,7 @@ window.plugin.portalslist.getPortals = function(){
         });
         
         var APgain= getAttackApGain(d).enemyAp;
-        var thisPortal = {'portal':d,'name':name,'team':team,'level':level,'guid':guid, 'resonators':resonators,'energy' : Math.floor(energy/maxenergy*100), 'shields':shields,'APgain':APgain};
+        var thisPortal = {'portal':d,'name':name,'team':team,'level':level,'guid':guid, 'resonators':resonators,'energyratio' : Math.floor(energy/maxenergy*100), 'shields':shields, 'APgain':APgain, 'EAP' : (energy/APgain).toFixed(2), 'energy': energy, 'maxenergy':maxenergy};
         window.plugin.portalslist.listPortals.push(thisPortal);
     });
     
@@ -200,7 +200,7 @@ window.plugin.portalslist.portalTable = function(sortBy, sortOrder, filter) {
     html += '<table>'
     + '<tr><th ' + sort('names', sortBy, -1) + '>Portal</th>' 
     + '<th ' + sort('level', sortBy, -1) + '>Level</th>'
-    + '<th ' + sort('team', sortBy, -1) + '>Team</th>'
+    + '<th title="Team" ' + sort('team', sortBy, -1) + '>T</th>'
     + '<th ' + sort('r1', sortBy, -1) + '>R1</th>'
     + '<th ' + sort('r2', sortBy, -1) + '>R2</th>'
     + '<th ' + sort('r3', sortBy, -1) + '>R3</th>'
@@ -209,12 +209,13 @@ window.plugin.portalslist.portalTable = function(sortBy, sortOrder, filter) {
     + '<th ' + sort('r6', sortBy, -1) + '>R6</th>'
     + '<th ' + sort('r7', sortBy, -1) + '>R7</th>'
     + '<th ' + sort('r8', sortBy, -1) + '>R8</th>'
-    + '<th ' + sort('energy', sortBy, -1) + '>Energy</th>'
+    + '<th ' + sort('energyratio', sortBy, -1) + '>Energy</th>'
     + '<th ' + sort('s1', sortBy, -1) + '>S1</th>'
     + '<th ' + sort('s2', sortBy, -1) + '>S2</th>'
     + '<th ' + sort('s3', sortBy, -1) + '>S3</th>'
     + '<th ' + sort('s4', sortBy, -1) + '>S4</th>'
-    + '<th ' + sort('APgain', sortBy, -1) + '>AP Gain</th></tr>';
+    + '<th ' + sort('APgain', sortBy, -1) + '>AP Gain</th>'
+    + '<th title="Energy / AP Gain ratio" ' + sort('EAP', sortBy, -1) + '>E/AP</th></tr>';
     
     
     $.each(portals, function(ind, portal) {
@@ -235,12 +236,13 @@ window.plugin.portalslist.portalTable = function(sortBy, sortOrder, filter) {
                 
             });
             
-            html += '<td style="text-align:center;">' + portal.energy + '%</td>'
-            + '<td style="cursor:help"; title="'+ portal.shields[0][1] +'">' + portal.shields[0][0] + '</td>'
-            + '<td style="cursor:help"; title="'+ portal.shields[1][1] +'">' + portal.shields[1][0] + '</td>'
-            + '<td style="cursor:help"; title="'+ portal.shields[2][1] +'">' + portal.shields[2][0] + '</td>'
-            + '<td style="cursor:help"; title="'+ portal.shields[3][1] +'">' + portal.shields[3][0] + '</td>'
-            + '<td>' + portal.APgain + '</td>';
+            html += '<td style="cursor:help" title="' + portal.energy + ' / ' + portal.maxenergy +'">' + portal.energyratio  + '%</td>'
+            + '<td style="cursor:help" title="'+ portal.shields[0][1] +'">' + portal.shields[0][0] + '</td>'
+            + '<td style="cursor:help" title="'+ portal.shields[1][1] +'">' + portal.shields[1][0] + '</td>'
+            + '<td style="cursor:help" title="'+ portal.shields[2][1] +'">' + portal.shields[2][0] + '</td>'
+            + '<td style="cursor:help" title="'+ portal.shields[3][1] +'">' + portal.shields[3][0] + '</td>'
+            + '<td>' + portal.APgain + '</td>'
+            + '<td>' + portal.EAP + '</td>';
  
             html+= '</tr>';
         }
@@ -296,7 +298,7 @@ window.plugin.portalslist.getPortalLink = function(portal,guid) {
         onClick: jsSingleClick,
         onDblClick: jsDoubleClick
     })[0].outerHTML;
-    var div = '<div style="max-height: 15px !important; min-width:145px !important;max-width:180px !important; overflow: hidden; text-overflow:ellipsis;">'+a+'</div>';
+    var div = '<div style="max-height: 15px !important; min-width:140px !important;max-width:180px !important; overflow: hidden; text-overflow:ellipsis;">'+a+'</div>';
     return div;
 }
 
