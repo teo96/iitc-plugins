@@ -1,22 +1,26 @@
 // ==UserScript==
 // @id             iitc-plugin-portals-list@teo96
-// @name           teo96: show list of portals
-// @version        0.0.6
-// @namespace      https://github.com/teo96/iitc-plugins/
-// @updateURL      https://raw.github.com/teo96/iitc-plugins/master/portals-list.user.js
-// @downloadURL    https://raw.github.com/teo96/iitc-plugins/master/portals-list.user.js
-// @description    Display a sortable list of all localized portails with team, level, resonators informations
+// @name           IITC plugin: show list of portals
+// @version        0.0.7.@@DATETIMEVERSION@@
+// @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
+// @updateURL      @@UPDATEURL@@
+// @downloadURL    @@DOWNLOADURL@@
+// @description    [@@BUILDNAME@@-@@BUILDDATE@@] Display a sortable list of all localized portails with team, level, resonators informations
 // @include        https://www.ingress.com/intel*
+// @include        http://www.ingress.com/intel*
 // @match          https://www.ingress.com/intel*
+// @match          http://www.ingress.com/intel*
 // ==/UserScript==
 
 /* whatsnew
+* 0.0.7 : Add names of players who deployed resonators and shield in tooltips.
 * 0.0.6 : Add power charge information into a new column + bugfix
 * 0.0.5 : Filter portals by clicking on 'All portals', 'Res Portals' or 'Enl Portals'
 * 0.0.4 : Add link to portals name, one click to display full information in portal panel, double click to zoom on portal, hover to show address
 * 0.0.3 : sorting ascending/descending and add numbers of portals by faction on top on table
 * 0.0.2 : add sorting feature when click on header column
 * 0.0.1 : initial release, show list of portals with level, team, resonators and shield information
+*
 * Display code inspired from @vita10gy's scoreboard plugin : iitc-plugin-scoreboard@vita10gy - https://github.com/breunigs/ingress-intel-total-conversion
 * Portal link code from xelio - iitc: AP List - https://raw.github.com/breunigs/ingress-intel-total-conversion/gh-pages/plugins/ap-list.user.js
 *
@@ -38,10 +42,10 @@ window.plugin.portalslist.enlP = 0;
 window.plugin.portalslist.resP = 0;
 window.plugin.portalslist.filter=0;
 
-//fill the listPortals array with portals avalaible on the map (by level filtered portals will not appear in the table)
+//fill the listPortals array with portals avalaible on the map (level filtered portals will not appear in the table)
 window.plugin.portalslist.getPortals = function(){
     //filter : 0 = All, 1 = Res, 2 = Enl
-    console.log('** getPortals');
+    //console.log('** getPortals');
     var retval=false;
     
     window.plugin.portalslist.listPortals = [];
@@ -64,7 +68,7 @@ window.plugin.portalslist.getPortals = function(){
         var level = getPortalLevel(d).toFixed(2);
         var guid = portal.options.guid;
         
-        //var player = portal.options.details.captured.capturingPlayerId;
+        
         //get resonators informations
         var resonators = []; // my local resonator array : reso level, reso deployed by, distance to portal, energy total, max 
         var energy = 0;
@@ -83,9 +87,10 @@ window.plugin.portalslist.getPortals = function(){
         var shields = [];
         $.each(d.portalV2.linkedModArray, function(ind, mod) {
             if (mod) 
-                shields[ind] = mod.rarity.capitalize().replace('_', ' ');
+                //shields[ind] = mod.rarity.capitalize().replace('_', ' ');
+                shields[ind] = [mod.rarity.substr(0,1).capitalize(), getPlayerName(mod.installingUser)] ;
             else
-                shields[ind] = ''; 
+                shields[ind] = ['', '']; 
         });
         
         var APgain= getAttackApGain(d).enemyAp;
@@ -98,7 +103,10 @@ window.plugin.portalslist.getPortals = function(){
 }
 
 window.plugin.portalslist.displayPL = function() {   
-    console.log('** displayPL');
+    // debug tools
+    //var start = new Date().getTime();
+    //console.log('***** Start ' + start);
+    
     var html = '';
     window.plugin.portalslist.sortOrder=-1;
     window.plugin.portalslist.enlP = 0;
@@ -125,110 +133,65 @@ window.plugin.portalslist.displayPL = function() {
     $(document).on('click', '#portalslist .filterEnl', function() {    	
         $('#portalslist').html(window.plugin.portalslist.portalTable($(this).data('sort'),window.plugin.portalslist.sortOrder,2));
     });
+    
+    //debug tools
+    //end = new Date().getTime();
+    //console.log('***** end : ' + end + ' and Elapse : ' + (end - start));
  }
     
 window.plugin.portalslist.portalTable = function(sortBy, sortOrder, filter) {
     // sortOrder <0 ==> desc, >0 ==> asc, i use sortOrder * -1 to change the state
     window.plugin.portalslist.filter=filter;
     var portals=window.plugin.portalslist.listPortals;
-    console.log('********************* Sort by ' + sortBy + ' order : ' + sortOrder + ' filter : ' + filter);
-    //tri du tableau window.plugin.portalslist.listPortals
+        
+    //Array sort
     window.plugin.portalslist.listPortals.sort(function(a, b) {
         var retVal = 0;
-        
-        if (sortOrder < 0) {
-            switch (sortBy) {
-                case 'names':
-                    retVal = a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1;
-                    break;
-                case 'r1':
-                    retVal = b.resonators[0][0] - a.resonators[0][0];
-                    break;
-                case 'r2':
-                    retVal = b.resonators[1][0] - a.resonators[1][0];
-                    break;
-                case 'r3':
-                    retVal = b.resonators[2][0] - a.resonators[2][0];
-                    break;
-                case 'r4':
-                    retVal = b.resonators[3][0] - a.resonators[3][0];
-                    break;
-                case 'r5':
-                    retVal = b.resonators[4][0] - a.resonators[4][0];
-                    break;
-                case 'r6':
-                    retVal = b.resonators[5][0] - a.resonators[5][0];
-                    break;
-                case 'r7':
-                    retVal = b.resonators[6][0] - a.resonators[6][0];
-                    break;
-                case 'r8':
-                    retVal = b.resonators[7][0] - a.resonators[7][0];
-                    break;
-                case 's1':
-                    retVal = a.shields[0].toLowerCase() > b.shields[0].toLowerCase() ? -1 : 1;
-                    break;
-                case 's2':
-                    retVal = a.shields[1].toLowerCase() > b.shields[1].toLowerCase() ? -1 : 1;
-                    break;
-                case 's3':
-                    retVal = a.shields[2].toLowerCase() > b.shields[2].toLowerCase() ? -1 : 1;
-                    break;
-                case 's4':
-                    retVal = a.shields[3].toLowerCase() > b.shields[3].toLowerCase() ? -1 : 1;
-                    break;
-                default:
-                    retVal = b[sortBy] - a[sortBy];    
-                    break;
-            } 
-        }
-        else
-        {
-            switch (sortBy) {
-                case 'names':
-                    retVal = a.name.toLowerCase() > b.name.toLowerCase() ? -1 : 1;
-                    break;
-                case 'r1':
-                    retVal = a.resonators[0][0] - b.resonators[0][0];
-                    break;
-                case 'r2':
-                    retVal = a.resonators[1][0] - b.resonators[1][0];
-                    break;
-                case 'r3':
-                    retVal = a.resonators[2][0] - b.resonators[2][0];
-                    break;
-                case 'r4':
-                    retVal = a.resonators[3][0] - b.resonators[3][0];
-                    break;
-                case 'r5':
-                    retVal = a.resonators[4][0] - b.resonators[4][0];
-                    break;
-                case 'r6':
-                    retVal = a.resonators[5][0] - b.resonators[5][0];
-                    break;
-                case 'r7':
-                    retVal = a.resonators[6][0] - b.resonators[6][0];
-                    break;
-                case 'r8':
-                    retVal = a.resonators[7][0] - b.resonators[7][0];
-                    break;
-                case 's1':
-                    retVal = a.shields[0].toLowerCase() < b.shields[0].toLowerCase() ? -1 : 1;
-                    break;
-                case 's2':
-                    retVal = a.shields[1].toLowerCase() < b.shields[1].toLowerCase() ? -1 : 1;
-                    break;
-                case 's3':
-                    retVal = a.shields[2].toLowerCase() < b.shields[2].toLowerCase() ? -1 : 1;
-                    break;
-                case 's4':
-                    retVal = a.shields[3].toLowerCase() < b.shields[3].toLowerCase() ? -1 : 1;
-                    break;
-                default:
-                    retVal = a[sortBy] - b[sortBy];    
-                    break;
-            }
-        }
+        switch (sortBy) {
+            case 'names':
+                retVal = a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1;
+                break;
+            case 'r1':
+                retVal = b.resonators[0][0] - a.resonators[0][0];
+                break;
+            case 'r2':
+                retVal = b.resonators[1][0] - a.resonators[1][0];
+                break;
+            case 'r3':
+                retVal = b.resonators[2][0] - a.resonators[2][0];
+                break;
+            case 'r4':
+                retVal = b.resonators[3][0] - a.resonators[3][0];
+                break;
+            case 'r5':
+                retVal = b.resonators[4][0] - a.resonators[4][0];
+                break;
+            case 'r6':
+                retVal = b.resonators[5][0] - a.resonators[5][0];
+                break;
+            case 'r7':
+                retVal = b.resonators[6][0] - a.resonators[6][0];
+                break;
+            case 'r8':
+                retVal = b.resonators[7][0] - a.resonators[7][0];
+                break;
+            case 's1':
+                retVal = a.shields[0].toLowerCase() > b.shields[0].toLowerCase() ? -1 : 1;
+                break;
+            case 's2':
+                retVal = a.shields[1].toLowerCase() > b.shields[1].toLowerCase() ? -1 : 1;
+                break;
+            case 's3':
+                retVal = a.shields[2].toLowerCase() > b.shields[2].toLowerCase() ? -1 : 1;
+                break;
+            case 's4':
+                retVal = a.shields[3].toLowerCase() > b.shields[3].toLowerCase() ? -1 : 1;
+                break;
+            default:
+                retVal = b[sortBy] - a[sortBy];    
+                break;
+        } 
+        if (sortOrder > 0) { retVal = -retVal} //thx @jonatkins
         return retVal;
     });  
     
@@ -247,10 +210,10 @@ window.plugin.portalslist.portalTable = function(sortBy, sortOrder, filter) {
     + '<th ' + sort('r7', sortBy, -1) + '>R7</th>'
     + '<th ' + sort('r8', sortBy, -1) + '>R8</th>'
     + '<th ' + sort('energy', sortBy, -1) + '>Energy</th>'
-    + '<th ' + sort('s1', sortBy, -1) + '>Shield 1</th>'
-    + '<th ' + sort('s2', sortBy, -1) + '>Shield 2</th>'
-    + '<th ' + sort('s3', sortBy, -1) + '>Shield 3</th>'
-    + '<th ' + sort('s4', sortBy, -1) + '>Shield 4</th>'
+    + '<th ' + sort('s1', sortBy, -1) + '>S1</th>'
+    + '<th ' + sort('s2', sortBy, -1) + '>S2</th>'
+    + '<th ' + sort('s3', sortBy, -1) + '>S3</th>'
+    + '<th ' + sort('s4', sortBy, -1) + '>S4</th>'
     + '<th ' + sort('APgain', sortBy, -1) + '>AP Gain</th></tr>';
     
     
@@ -258,26 +221,27 @@ window.plugin.portalslist.portalTable = function(sortBy, sortOrder, filter) {
         
         if (filter === 0 || filter === portal.team){
             html += '<tr class="' + (portal.team === 1 ? 'res' : (portal.team === 2 ? 'enl' : 'neutral')) + '">'
-            + '<td style="min-width:145px !important">' + window.plugin.portalslist.getPortalLink(portal.portal, portal.guid) + '</td>'
-            //+ '<td>' + portal.name + '</td>'
+            + '<td style="">' + window.plugin.portalslist.getPortalLink(portal.portal, portal.guid) + '</td>'
             + '<td class="L' + Math.floor(portal.level) +'">' + portal.level + '</td>'
-            + '<td style="text-align:center;">' + portal.team + '</td>'
-            + '<td class="L' + portal.resonators[0][0] +'">' + portal.resonators[0][0] + '</td>'
-            //+ '<td><span class="meter"><span style="width:72.35%; background:#EB26CD;"></span><span class="meter-level" style="color: #FFFFFF;">6</span></span>'
-            + '<td class="L' + portal.resonators[1][0] +'">' + portal.resonators[1][0] + '</td>'
-            + '<td class="L' + portal.resonators[2][0] +'">' + portal.resonators[2][0] + '</td>'
-            + '<td class="L' + portal.resonators[3][0] +'">' + portal.resonators[3][0] + '</td>'
-            + '<td class="L' + portal.resonators[4][0] +'">' + portal.resonators[4][0] + '</td>'
-            + '<td class="L' + portal.resonators[5][0] +'">' + portal.resonators[5][0] + '</td>'
-            + '<td class="L' + portal.resonators[6][0] +'">' + portal.resonators[6][0] + '</td>'
-            + '<td class="L' + portal.resonators[7][0] +'">' + portal.resonators[7][0] + '</td>'
-            + '<td style="text-align:center;">' + portal.energy + '%</td>'
-            + '<td style="font-size:10px">' + portal.shields[0] + '</td>'
-            + '<td style="font-size:10px">' + portal.shields[1] + '</td>'
-            + '<td style="font-size:10px">' + portal.shields[2] + '</td>'
-            + '<td style="font-size:10px">' + portal.shields[3] + '</td>'
-            + '<td>' + portal.APgain + '</td>';
+            + '<td style="text-align:center;">' + portal.team + '</td>';
             
+            $.each([0, 1, 2, 3 ,4 ,5 ,6 ,7], function(ind, slot) {
+                
+                var title = 'title="owner: <b>' + portal.resonators[slot][1] + '</b><br>'
+                + 'energy: ' + portal.resonators[slot][3] + ' / ' + portal.resonators[slot][4] + ' (' + Math.floor(portal.resonators[slot][3]/portal.resonators[slot][4]*100) + '%)<br>'
+                + 'distance: ' + portal.resonators[slot][2] + 'm';
+                
+                html += '<td class="L' + portal.resonators[slot][0] +'" ' + title + '">' + portal.resonators[slot][0] + '</td>';
+                
+            });
+            
+            html += '<td style="text-align:center;">' + portal.energy + '%</td>'
+            + '<td style="cursor:help"; title="'+ portal.shields[0][1] +'">' + portal.shields[0][0] + '</td>'
+            + '<td style="cursor:help"; title="'+ portal.shields[1][1] +'">' + portal.shields[1][0] + '</td>'
+            + '<td style="cursor:help"; title="'+ portal.shields[2][1] +'">' + portal.shields[2][0] + '</td>'
+            + '<td style="cursor:help"; title="'+ portal.shields[3][1] +'">' + portal.shields[3][0] + '</td>'
+            + '<td>' + portal.APgain + '</td>';
+ 
             html+= '</tr>';
         }
   
@@ -293,11 +257,11 @@ window.plugin.portalslist.portalTable = function(sortBy, sortOrder, filter) {
 
 
 window.plugin.portalslist.stats = function(sortBy) {
-    console.log('** stats');
+    //console.log('** stats');
     var html = '<table><tr>'
-    + '<td class="filterAll" style="cursor:pointer"  onclick="window.plugin.portalslist.portalTable(\'level\',-1,0)"><a href=""></a>All Portals : (click to filter)</td><td class="filterAll">' + window.plugin.portalslist.listPortals.length +'</td>'
-    + '<td class="filterRes" style="cursor:pointer" class="sorted" onclick="window.plugin.portalslist.portalTable(\'level\',-1,1)">Resistant Portals : </td><td class="filterRes">' + window.plugin.portalslist.resP + '</td>' 
-    + '<td class="filterEnl" style="cursor:pointer" class="sorted" onclick="window.plugin.portalslist.portalTable(\'level\',-1,2)">Enlightened Portals : </td><td class="filterEnl">'+ window.plugin.portalslist.enlP + '</td>'  
+    + '<td class="filterAll" style="cursor:pointer"  onclick="window.plugin.portalslist.portalTable(\'level\',-1,0)"><a href=""></a>All Portals : (click to filter)</td><td class="filterAll">' + window.plugin.portalslist.listPortals.length + '</td>'
+    + '<td class="filterRes" style="cursor:pointer" class="sorted" onclick="window.plugin.portalslist.portalTable(\'level\',-1,1)">Resistant Portals : </td><td class="filterRes">' + window.plugin.portalslist.resP +' (' + Math.floor(window.plugin.portalslist.resP/window.plugin.portalslist.listPortals.length*100) + '%)</td>' 
+    + '<td class="filterEnl" style="cursor:pointer" class="sorted" onclick="window.plugin.portalslist.portalTable(\'level\',-1,2)">Enlightened Portals : </td><td class="filterEnl">'+ window.plugin.portalslist.enlP +' (' + Math.floor(window.plugin.portalslist.enlP/window.plugin.portalslist.listPortals.length*100) + '%)</td>'  
     + '</tr>'
     + '</table>';
     return html;
@@ -332,7 +296,7 @@ window.plugin.portalslist.getPortalLink = function(portal,guid) {
         onClick: jsSingleClick,
         onDblClick: jsDoubleClick
     })[0].outerHTML;
-    var div = '<div style="overflow: hidden; text-overflow:ellipsis;">'+a+'</div>';
+    var div = '<div style="max-height: 15px !important; min-width:145px !important;max-width:180px !important; overflow: hidden; text-overflow:ellipsis;">'+a+'</div>';
     return div;
 }
 
@@ -348,15 +312,15 @@ var setup =  function() {
     '#portalslist table tr.neutral td {  background-color: #000000; }' +
     '#portalslist table th { text-align:center;}' +
     '#portalslist table td { text-align: center;}' +
-    '#portalslist table td.L0 { background-color: #000000 !important;}' +
-    '#portalslist table td.L1 { background-color: #FECE5A !important;}' +
-	'#portalslist table td.L2 { background-color: #FFA630 !important;}' +
-	'#portalslist table td.L3 { background-color: #FF7315 !important;}' +
-	'#portalslist table td.L4 { background-color: #E40000 !important;}' +
-	'#portalslist table td.L5 { background-color: #FD2992 !important;}' +
-	'#portalslist table td.L6 { background-color: #EB26CD !important;}' +
-    '#portalslist table td.L7 { background-color: #C124E0 !important;}' +
-	'#portalslist table td.L8 { background-color: #9627F4 !important;}' + 
+    '#portalslist table td.L0 { cursor: help; background-color: #000000 !important;}' +
+    '#portalslist table td.L1 { cursor: help; background-color: #FECE5A !important;}' +
+	'#portalslist table td.L2 { cursor: help; background-color: #FFA630 !important;}' +
+	'#portalslist table td.L3 { cursor: help; background-color: #FF7315 !important;}' +
+	'#portalslist table td.L4 { cursor: help; background-color: #E40000 !important;}' +
+	'#portalslist table td.L5 { cursor: help; background-color: #FD2992 !important;}' +
+	'#portalslist table td.L6 { cursor: help; background-color: #EB26CD !important;}' +
+    '#portalslist table td.L7 { cursor: help; background-color: #C124E0 !important;}' +
+	'#portalslist table td.L8 { cursor: help; background-color: #9627F4 !important;}' + 
     '#portalslist table td:nth-child(1) { text-align: left;}' +
     '#portalslist table th { cursor:pointer; text-align: right;}' +
     '#portalslist table th:nth-child(1) { text-align: left;}' +
