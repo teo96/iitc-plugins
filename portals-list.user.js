@@ -249,6 +249,7 @@ window.plugin.portalslist.portalTable = function(sortBy, sortOrder, filter) {
   
     });
     html+='</table>';
+    html+='<div><aside><a onclick="window.plugin.portalslist.export(\'csv\')">Export as .csv</a></aside><aside><a onclick="window.plugin.portalslist.export(\'kml\')">Export as .kml</a></aside></div>';
     html+= '<div class="disclaimer">Click on portals table headers to sort by that column.<br> '
       + 'Click on All Portals, Resistant Portals, Enlightened Portals to filter<br>'
       + 'Thanks to @vita10gy & @xelio for their IITC plugins who inspired me. A <a href="https://plus.google.com/113965246471577467739">@teo96</a> production. Vive la Résistance !</div>';
@@ -257,6 +258,13 @@ window.plugin.portalslist.portalTable = function(sortBy, sortOrder, filter) {
     return html;
 }
 
+window.plugin.portalslist.export = function(fileformat){
+    alert('format :' + fileformat);
+    // parcours tableau (+ refaire filtres & sort ?) & mise en forme ou parcours de la table ?
+    //voir http://stackoverflow.com/questions/4639372/export-to-csv-in-jquery
+    //var uri = 'data:application/csv;charset=UTF-8,' + encodeURIComponent(exportdata);
+    //window.open(uri)
+}
 
 window.plugin.portalslist.stats = function(sortBy) {
     //console.log('** stats');
