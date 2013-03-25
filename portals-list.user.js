@@ -331,7 +331,7 @@ window.plugin.portalslist.exportKML = function(){
             + ']]>';
             
             kml += '<Placemark><name>L' + Math.floor(portal.level) + ' - ' + portal.name + '</name>'
-            + '<description>' +  description + '</description>'
+            + '<description>' +  description + '</description>';
             //choose the good icon marker for the good team (style number = team number)
             + '<styleUrl>#style' + portal.team + '</styleUrl>';
             
