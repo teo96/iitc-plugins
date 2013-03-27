@@ -1,7 +1,7 @@
                                              // ==UserScript==
 // @id             iitc-plugin-portals-list@teo96
 // @name           IITC plugin: show list of portals
-// @version        0.0.8.1@@DATETIMEVERSION@@
+// @version        0.0.8.2@@DATETIMEVERSION@@
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
 // @updateURL      @@UPDATEURL@@
 // @downloadURL    @@DOWNLOADURL@@
@@ -276,8 +276,8 @@ window.plugin.portalslist.exportLinks = function(){
     var html='';
     var stamp = new Date().getTime();
     
-    html+='<div><aside><a download="Ingress Export ' + stamp + '.csv" href="' + window.plugin.portalslist.export('csv') + '">Export as .csv</a></aside>' 
-    + '<aside><a download="Ingress Export ' + stamp + '.kml" href="' + window.plugin.portalslist.export('kml') + '">Export as .kml</a></aside>'
+    html+='<div><aside><a download="Ingress Export.csv" href="' + window.plugin.portalslist.export('csv') + '">Export as .csv</a></aside>' 
+    + '<aside><a download="Ingress Export.kml" href="' + window.plugin.portalslist.export('kml') + '">Export as .kml</a></aside>'
     + '<aside>Open in Google Maps</div>';
     return html;
 }
@@ -309,21 +309,21 @@ window.plugin.portalslist.exportCSV = function(){
     var portals = window.plugin.portalslist.listPortals;
    
    //headers
-    csv += 'Portal,Level,Team,R1,R2,R3,R4,R5,R6,R7,R8,Energy,S1,S2,S3,S4,AP Gain,E/AP,lat,long\n';
+    csv += 'Portal\tLevel\tTeam\tR1\tR2\tR3\tR4\tR5\tR6\tR7\tR8\tEnergy\tS1\tS2\tS3\tS4\tAP Gain\tE/AP\tlat\tlong\n';
     
     $.each(portals, function(ind, portal) {
         
         if (filter === 0 || filter === portal.team){
-            csv += portal.name + ',' 
-              + portal.level + ','
-              + portal.team + ',';
+            csv += portal.name + '\t' 
+              + portal.level + '\t'
+              + portal.team + '\t';
            
             $.each([0, 1, 2, 3 ,4 ,5 ,6 ,7], function(ind, slot) {
-                csv += portal.resonators[slot][0] + ',';
+                csv += portal.resonators[slot][0] + '\t';
             });
             
-            csv += portal.energyratio + ',' + portal.shields[0][0] + ',' + portal.shields[1][0] + ',' + portal.shields[2][0] + ',' + portal.shields[3][0] + ',' + portal.APgain + ',' + portal.EAP;
-            csv += portal.lat + ',' + portal.lng;
+            csv += portal.energyratio + '\t' + portal.shields[0][0] + '\t' + portal.shields[1][0] + '\t' + portal.shields[2][0] + '\t' + portal.shields[3][0] + '\t' + portal.APgain + '\t' + portal.EAP + '\t';
+            csv += portal.lat + '\t' + portal.lng;
             csv += '\n';
         }  
     });
@@ -339,12 +339,12 @@ window.plugin.portalslist.exportKML = function(){
    
    //headers
     kml = '<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document>\n'
-    + '<name>Ingress Export</name><description><![CDATA[]]></description>';
+    + '<name>Ingress Export</name><description><![CDATA[Ingress Portals<br>Exported from IITC using the Portals-list plugin<br>' + new Date().toLocaleString() + ']]></description>';
     
     // define colored markers as style0 (neutral), style1 (Resistance), style2 (Enlight)
     kml += '<Style id="style1"><IconStyle><Icon><href>http://maps.gstatic.com/mapfiles/ms2/micons/blue-dot.png</href></Icon></IconStyle></Style>'
     + '<Style id="style2"><IconStyle><Icon><href>http://maps.gstatic.com/mapfiles/ms2/micons/green-dot.png</href></Icon></IconStyle></Style>'
-    + '<Style id="style0"><IconStyle><Icon><href>http://maps.gstatic.com/mapfiles/ms2/micons/pink-dot.png</href></Icon></IconStyle></Style>';
+    + '<Style id="style0"><IconStyle><Icon><href>http://maps.gstatic.com/mapfiles/ms2/micons/pink-dot.png</href></Icon></IconStyle></Style>\n';
     
     $.each(portals, function(ind, portal) {
         // add the portal in the kml file only if part of the filter choice
@@ -356,8 +356,7 @@ window.plugin.portalslist.exportKML = function(){
             + ']]>';
             
             kml += '<Placemark><name>L' + Math.floor(portal.level) + ' - ' + portal.name + '</name>'
-            + '<description>' +  description + '</description>';
-            //choose the good icon marker for the good team (style number = team number)
+            + '<description>' +  description + '</description>'
             + '<styleUrl>#style' + portal.team + '</styleUrl>';
             
             //coordinates
