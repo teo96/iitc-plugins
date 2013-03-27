@@ -1,4 +1,4 @@
-                                             // ==UserScript==
+// ==UserScript==
 // @id             iitc-plugin-portals-list@teo96
 // @name           IITC plugin: show list of portals
 // @version        0.0.8.2@@DATETIMEVERSION@@
