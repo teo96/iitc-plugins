@@ -1,7 +1,7 @@
 // ==UserScript==
 // @id             iitc-plugin-portals-list@teo96
 // @name           IITC plugin: show list of portals
-// @version        0.0.8.2@@DATETIMEVERSION@@
+// @version        0.0.9@@DATETIMEVERSION@@
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
 // @updateURL      @@UPDATEURL@@
 // @downloadURL    @@DOWNLOADURL@@
@@ -13,6 +13,7 @@
 // ==/UserScript==
 
 /* whatsnew
+* 0.0.9 : bugs hunt
 * 0.0.8 : export portals informations as csv or kml file
 * 0.0.7 : more informations avalaible via tooltips (who deployed, energy, ...), new E/AP column 
 * 0.0.6 : Add power charge information into a new column + bugfix
@@ -278,7 +279,7 @@ window.plugin.portalslist.exportLinks = function(){
     
     html+='<div><aside><a download="Ingress Export.csv" href="' + window.plugin.portalslist.export('csv') + '">Export as .csv</a></aside>' 
     + '<aside><a download="Ingress Export.kml" href="' + window.plugin.portalslist.export('kml') + '">Export as .kml</a></aside>'
-    + '<aside>Open in Google Maps</div>';
+    + '</div>';
     return html;
 }
 
