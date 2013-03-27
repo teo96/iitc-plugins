@@ -1,7 +1,7 @@
                                              // ==UserScript==
 // @id             iitc-plugin-portals-list@teo96
 // @name           IITC plugin: show list of portals
-// @version        0.0.8.@@DATETIMEVERSION@@
+// @version        0.0.8.1@@DATETIMEVERSION@@
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
 // @updateURL      @@UPDATEURL@@
 // @downloadURL    @@DOWNLOADURL@@
@@ -101,7 +101,6 @@ window.plugin.portalslist.getPortals = function(){
     });
     
     return retval;
-    
 }
 
 window.plugin.portalslist.displayPL = function() {   
@@ -249,10 +248,11 @@ window.plugin.portalslist.portalTable = function(sortBy, sortOrder, filter) {
             html+= '</tr>';
         }
     });
-    html+='</table>';
-    html+='<div><aside><a onclick="window.plugin.portalslist.export(\'csv\')">Export as .csv</a></aside><aside><a onclick="window.plugin.portalslist.export(\'kml\')">Export as .kml</a></aside>'
-    +'<aside>Open in Google Maps</div>';
-    html+= '<div class="disclaimer">Click on portals table headers to sort by that column. '
+    html += '</table>';
+    
+    html += window.plugin.portalslist.exportLinks();
+    
+    html += '<div class="disclaimer">Click on portals table headers to sort by that column. '
       + 'Click on <b>All Portals, Resistant Portals, Enlightened Portals</b> to filter<br>'
       + 'Thanks to @vita10gy & @xelio for their IITC plugins who inspired me. A <a href="https://plus.google.com/113965246471577467739">@teo96</a> production. Vive la Résistance !</div>';
 
@@ -260,9 +260,32 @@ window.plugin.portalslist.portalTable = function(sortBy, sortOrder, filter) {
     return html;
 }
 
+window.plugin.portalslist.stats = function(sortBy) {
+    //console.log('** stats');
+    var html = '<table><tr>'
+    + '<td class="filterAll" style="cursor:pointer"  onclick="window.plugin.portalslist.portalTable(\'level\',-1,0)"><a href=""></a>All Portals : (click to filter)</td><td class="filterAll">' + window.plugin.portalslist.listPortals.length + '</td>'
+    + '<td class="filterRes" style="cursor:pointer" class="sorted" onclick="window.plugin.portalslist.portalTable(\'level\',-1,1)">Resistant Portals : </td><td class="filterRes">' + window.plugin.portalslist.resP +' (' + Math.floor(window.plugin.portalslist.resP/window.plugin.portalslist.listPortals.length*100) + '%)</td>' 
+    + '<td class="filterEnl" style="cursor:pointer" class="sorted" onclick="window.plugin.portalslist.portalTable(\'level\',-1,2)">Enlightened Portals : </td><td class="filterEnl">'+ window.plugin.portalslist.enlP +' (' + Math.floor(window.plugin.portalslist.enlP/window.plugin.portalslist.listPortals.length*100) + '%)</td>'  
+    + '</tr>'
+    + '</table>';
+    return html;
+}
+
+//return Html generated to export links
+window.plugin.portalslist.exportLinks = function(){
+    var html='';
+    var stamp = new Date().getTime();
+    
+    html+='<div><aside><a download="Ingress Export ' + stamp + '.csv" href="' + window.plugin.portalslist.export('csv') + '">Export as .csv</a></aside>' 
+    + '<aside><a download="Ingress Export ' + stamp + '.kml" href="' + window.plugin.portalslist.export('kml') + '">Export as .kml</a></aside>'
+    + '<aside>Open in Google Maps</div>';
+    return html;
+}
+
 window.plugin.portalslist.export = function(fileformat){
     //alert('format :' + fileformat);
     var file = '';
+    var uri = '';
     
     switch (fileformat) {
       case 'csv':
@@ -275,9 +298,10 @@ window.plugin.portalslist.export = function(fileformat){
     
     if (file !== '') {
        //http://stackoverflow.com/questions/4639372/export-to-csv-in-jquery
-       var uri = 'data:application/csv;charset=UTF-8,' + encodeURIComponent(file);
-       window.open(uri);
+       var uri = 'data:application/' + fileformat + 'csv;charset=UTF-8,' + encodeURIComponent(file);
+       //window.open(uri);
     }
+    return uri;
 }
 window.plugin.portalslist.exportCSV = function(){
     var csv = '';
@@ -285,20 +309,21 @@ window.plugin.portalslist.exportCSV = function(){
     var portals = window.plugin.portalslist.listPortals;
    
    //headers
-    csv += 'Portal\tLevel\tTeam\tR1\tR2\tR3\tR4\tR5\tR6\tR7\tR8\tEnergy\tS1\tS2\tS3\tS4\tAP Gain\tE/AP\n';
+    csv += 'Portal,Level,Team,R1,R2,R3,R4,R5,R6,R7,R8,Energy,S1,S2,S3,S4,AP Gain,E/AP,lat,long\n';
     
     $.each(portals, function(ind, portal) {
         
         if (filter === 0 || filter === portal.team){
-            csv += portal.name + '\t' 
-              + portal.level + '\t'
-              + portal.team + '\t';
+            csv += portal.name + ',' 
+              + portal.level + ','
+              + portal.team + ',';
            
             $.each([0, 1, 2, 3 ,4 ,5 ,6 ,7], function(ind, slot) {
-                csv += portal.resonators[slot][0] + '\t';
+                csv += portal.resonators[slot][0] + ',';
             });
             
-            csv += portal.energyratio + '\t' + portal.shields[0][0] + '\t' + portal.shields[1][0] + '\t' + portal.shields[2][0] + '\t' + portal.shields[3][0] + '\t' + portal.APgain + '\t' + portal.EAP;
+            csv += portal.energyratio + ',' + portal.shields[0][0] + ',' + portal.shields[1][0] + ',' + portal.shields[2][0] + ',' + portal.shields[3][0] + ',' + portal.APgain + ',' + portal.EAP;
+            csv += portal.lat + ',' + portal.lng;
             csv += '\n';
         }  
     });
@@ -313,7 +338,7 @@ window.plugin.portalslist.exportKML = function(){
     var portals = window.plugin.portalslist.listPortals;
    
    //headers
-    kml = '<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document>'
+    kml = '<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document>\n'
     + '<name>Ingress Export</name><description><![CDATA[]]></description>';
     
     // define colored markers as style0 (neutral), style1 (Resistance), style2 (Enlight)
@@ -331,7 +356,7 @@ window.plugin.portalslist.exportKML = function(){
             + ']]>';
             
             kml += '<Placemark><name>L' + Math.floor(portal.level) + ' - ' + portal.name + '</name>'
-            + '<description>' +  description + '</description>'
+            + '<description>' +  description + '</description>';
             //choose the good icon marker for the good team (style number = team number)
             + '<styleUrl>#style' + portal.team + '</styleUrl>';
             
@@ -342,20 +367,6 @@ window.plugin.portalslist.exportKML = function(){
     });
 	kml += '</Document></kml>';
     return kml;
-}
-
-
-
-
-window.plugin.portalslist.stats = function(sortBy) {
-    //console.log('** stats');
-    var html = '<table><tr>'
-    + '<td class="filterAll" style="cursor:pointer"  onclick="window.plugin.portalslist.portalTable(\'level\',-1,0)"><a href=""></a>All Portals : (click to filter)</td><td class="filterAll">' + window.plugin.portalslist.listPortals.length + '</td>'
-    + '<td class="filterRes" style="cursor:pointer" class="sorted" onclick="window.plugin.portalslist.portalTable(\'level\',-1,1)">Resistant Portals : </td><td class="filterRes">' + window.plugin.portalslist.resP +' (' + Math.floor(window.plugin.portalslist.resP/window.plugin.portalslist.listPortals.length*100) + '%)</td>' 
-    + '<td class="filterEnl" style="cursor:pointer" class="sorted" onclick="window.plugin.portalslist.portalTable(\'level\',-1,2)">Enlightened Portals : </td><td class="filterEnl">'+ window.plugin.portalslist.enlP +' (' + Math.floor(window.plugin.portalslist.enlP/window.plugin.portalslist.listPortals.length*100) + '%)</td>'  
-    + '</tr>'
-    + '</table>';
-    return html;
 }
 
 // A little helper functon so the above isn't so messy
