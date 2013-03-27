@@ -340,7 +340,7 @@ window.plugin.portalslist.exportKML = function(){
    
    //headers
     kml = '<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document>\n'
-    + '<name>Ingress Export</name><description><![CDATA[Ingress Portals<br>Exported from IITC using the Portals-list plugin<br>' + new Date().toLocaleString() + ']]></description>';
+    + '<name>Ingress Export</name><description><![CDATA[Ingress Portals\nExported from IITC using the Portals-list plugin\n' + new Date().toLocaleString() + ']]></description>';
     
     // define colored markers as style0 (neutral), style1 (Resistance), style2 (Enlight)
     kml += '<Style id="style1"><IconStyle><Icon><href>http://maps.gstatic.com/mapfiles/ms2/micons/blue-dot.png</href></Icon></IconStyle></Style>'
